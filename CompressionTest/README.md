@@ -140,3 +140,6 @@ Deliverables produced
 results/results.csv – raw measurements for each QP
 results/qp_report.xlsx – spreadsheet report with charts
 outputs/*.264 – encoded bitstreams for each QP
+
+ChatGPT conversation used:
+https://chatgpt.com/share/699e1a51-bc30-8012-9178-7ee58321d51b
