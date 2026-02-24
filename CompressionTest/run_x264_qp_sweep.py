@@ -47,6 +47,9 @@ def run_x264(qp: int) -> dict:
     # x264 often writes progress to stderr, but we combine both
     log = (proc.stderr or "") + "\n" + (proc.stdout or "")
 
+    # ADDED: save full log per QP
+    (RES_DIR / f"x264_qp{qp:02d}.log").write_text(log, encoding="utf-8", errors="replace")
+
     fps = None
     m = FPS_REGEX.search(log)
     if m:
@@ -57,6 +60,11 @@ def run_x264(qp: int) -> dict:
 
     # Ensure file exists and is flushed
     size_bytes = out_file.stat().st_size if out_file.exists() else None
+
+    # ADDED: simple failure print
+    if proc.returncode != 0:
+        print(f"QP={qp} FAILED (return_code={proc.returncode})")
+        print(log.splitlines()[-20:])  # last lines usually contain the error
 
     # Debug when something is missing
     if proc.returncode != 0 or size_bytes is None or fps is None:
