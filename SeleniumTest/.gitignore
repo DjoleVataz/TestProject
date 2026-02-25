@@ -1,2 +1,5 @@
 # Maven build output
 /target/
+
+# VSC settings
+.vscode/
