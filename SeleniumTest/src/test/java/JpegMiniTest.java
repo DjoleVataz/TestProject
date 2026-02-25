@@ -1,6 +1,5 @@
 import java.net.URL;
 import java.nio.file.Files;
-import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Duration;
@@ -94,16 +93,16 @@ public class JpegMiniTest {
         System.out.printf("UI: original=%d bytes, output=%d bytes, reduction=%.2f%%%n",
                 ui.originalBytes(), ui.compressedBytes(), ui.reductionPercent());
 
-        // Clean folder directory before download
+        // Clean folder before download
         cleanDirectory(downloadDir);
         // Click Download the video
         page.clickDownloadVideo();
 
-        Path downloaded = waitForDownloadedVideo(downloadDir, Duration.ofMinutes(5));
+        Path downloaded = waitForDownloadedVideo(driver, downloadDir, Duration.ofMinutes(5));
         long downloadedBytes = Files.size(downloaded);
 
-        System.out.println("Downloaded file size: " + downloadedBytes);
-        System.out.println("Original file size: " + originalBytes);
+        System.out.println("Downloaded file size: " + downloadedBytes + "bytes");
+        System.out.println("Original file size: " + originalBytes + "bytes");
 
         // Rename the downloaded video
         String ext = getExtension(downloaded.getFileName().toString());
@@ -156,35 +155,32 @@ public class JpegMiniTest {
      * Waits for Chrome to finish downloading an .mp4 file into the given directory.
      * Returns the first .mp4 file found once download is complete.
      */
-    private static Path waitForDownloadedVideo(Path dir, Duration timeout) throws Exception {
-        long end = System.currentTimeMillis() + timeout.toMillis();
+private static Path waitForDownloadedVideo(WebDriver driver, Path dir, Duration timeout) {
+    return new org.openqa.selenium.support.ui.WebDriverWait(driver, timeout)
+            .pollingEvery(Duration.ofMillis(200)) // adjust as you like
+            .ignoring(java.nio.file.NoSuchFileException.class)
+            .until(d -> {
+                try (var stream = Files.list(dir)) {
+                    var files = stream.toList();
 
-        while (System.currentTimeMillis() < end) {
-            try (var stream = Files.list(dir)) {
-                var files = stream.toList();
+                    // If any .crdownload exists, Chrome is still downloading
+                    boolean hasTemp = files.stream().anyMatch(p -> p.toString().endsWith(".crdownload"));
+                    if (hasTemp) return null;
 
-                // still downloading
-                boolean hasTemp = files.stream().anyMatch(p -> p.toString().endsWith(".crdownload"));
-                if (hasTemp) {
-                    Thread.sleep(500);
-                    continue;
-                }
-
-                // pick newest MP4 only
-                for (int i = files.size() - 1; i >= 0; i--) {
-                    Path p = files.get(i);
-                    String name = p.getFileName().toString().toLowerCase();
-                    if (Files.isRegularFile(p) && name.endsWith(".mp4")) {
-                        return p;
+                    // Return the newest .mp4 file found
+                    for (int i = files.size() - 1; i >= 0; i--) {
+                        Path p = files.get(i);
+                        String name = p.getFileName().toString().toLowerCase();
+                        if (Files.isRegularFile(p) && name.endsWith(".mp4")) {
+                            return p;
+                        }
                     }
+                    return null;
+                } catch (Exception e) {
+                    return null; // keep waiting
                 }
-            } catch (NoSuchFileException ignored) {
-            }
-
-            Thread.sleep(500);
-        }
-        throw new RuntimeException("Video download (.mp4) did not complete in time. Folder: " + dir);
-    }
+            });
+}
 
     /**
      * Returns file extension including dot (".mp4"), or empty string if no extension exists.
