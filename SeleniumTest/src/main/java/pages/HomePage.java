@@ -2,7 +2,6 @@ package pages;
 
 import java.nio.file.Path;
 import java.time.Duration;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.regex.Matcher;
@@ -26,22 +25,12 @@ public class HomePage {
     // --- Locators ---
     // homepage
     private final By compressVideosBtn = By.cssSelector("a[href*='./compress-videos']");
-    // drop inside
-    private final By fileInputInsideDropzone = By.cssSelector("label.dropzone input[type='file']");
-    private final By fileInputAnywhere = By.cssSelector("input[type='file']");
 
     // Download the video
     private final By downloadVideoBtn = By.cssSelector("div.optimizer-download-btn");
 
     // Upload progress bar (exists while uploading)
     private final By uploadProgressBar = By.cssSelector("div.uploader-progressbar");
-
-    // Spinner during compressing
-    private final By compressSpinner = By.cssSelector("div.main.upload-status svg");
-
-    // Popup close
-    private final By popupCloseBtn = By.cssSelector(
-            "[data-framer-name='CloseButton'], [data-framer-name='CloseBtn'], [data-framer-name='Close']");
 
     // Result sizes
     private final By sizeValuesInResult = By.cssSelector("div.sizes div.size-value");
@@ -181,19 +170,6 @@ public class HomePage {
     }
 
     // ---------- helpers ----------
-    private WebElement findFileInput() {
-        List<WebElement> inputs = driver.findElements(fileInputInsideDropzone);
-        if (!inputs.isEmpty()) {
-            return inputs.get(0);
-        }
-
-        inputs = driver.findElements(fileInputAnywhere);
-        if (!inputs.isEmpty()) {
-            return inputs.get(0);
-        }
-
-        throw new org.openqa.selenium.NoSuchElementException("Could not find any input[type='file'] on the page.");
-    }
 
     private void waitForPageReady() {
         try {
@@ -201,35 +177,6 @@ public class HomePage {
                     .executeScript("return document.readyState").equals("complete"));
         } catch (Exception ignored) {
         }
-    }
-
-    private static List<Long> extractSizesToBytes(String text) {
-        Pattern p = Pattern.compile("(\\d+(?:[\\.,]\\d+)?)\\s*(B|KB|MB|GB)", Pattern.CASE_INSENSITIVE);
-        Matcher m = p.matcher(text);
-
-        List<Long> out = new ArrayList<>();
-        while (m.find()) {
-            double value = Double.parseDouble(m.group(1).replace(",", "."));
-            String unit = m.group(2).toUpperCase(Locale.ROOT);
-
-            long bytes;
-            switch (unit) {
-                case "B" ->
-                    bytes = (long) value;
-                case "KB" ->
-                    bytes = (long) (value * 1024);
-                case "MB" ->
-                    bytes = (long) (value * 1024 * 1024);
-                case "GB" ->
-                    bytes = (long) (value * 1024 * 1024 * 1024);
-                default ->
-                    bytes = 0;
-            }
-            if (bytes > 0) {
-                out.add(bytes);
-            }
-        }
-        return out;
     }
 
     public record SizePair(long originalBytes, long compressedBytes) {
@@ -302,27 +249,6 @@ public class HomePage {
 
         ((JavascriptExecutor) driver).executeScript("arguments[0].scrollIntoView({block:'center'});", btn);
         ((JavascriptExecutor) driver).executeScript("arguments[0].click();", btn);
-    }
-
-    // parse helper
-    private static long parseSizeToBytes(String text) {
-        // Handles: "10.7" with "MB" on next line, or "10.7 MB" in one string
-        String normalized = text.replace("\n", " ").trim();
-
-        Pattern p = Pattern.compile("(\\d+(?:[\\.,]\\d+)?)\\s*(B|KB|MB|GB)", Pattern.CASE_INSENSITIVE);
-        Matcher m = p.matcher(normalized);
-        if (!m.find()) {
-            throw new RuntimeException("Unrecognized size text: " + text);
-        }
-        double value = Double.parseDouble(m.group(1).replace(",", "."));
-        String unit = m.group(2).toUpperCase(Locale.ROOT);
-        return switch (unit) {
-            case "B" -> (long) value;
-            case "KB" -> (long) (value * 1024);
-            case "MB" -> (long) (value * 1024 * 1024);
-            case "GB" -> (long) (value * 1024 * 1024 * 1024);
-            default -> throw new RuntimeException("Unknown unit: " + unit);
-        };
     }
 
 }
