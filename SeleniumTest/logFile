@@ -1,0 +1,63 @@
+This file has a purpose of providing logs from when I last time run the test:
+
+PS C:\TestProject\SeleniumTest> mvn clean test
+[INFO] Scanning for projects...
+[INFO] 
+[INFO] --------------------< com.testproject:seleniumtest >--------------------
+[INFO] Building seleniumtest 1.0-SNAPSHOT
+[INFO]   from pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- clean:3.2.0:clean (default-clean) @ seleniumtest ---
+[INFO] Deleting C:\TestProject\SeleniumTest\target
+[INFO]
+[INFO] --- resources:3.3.1:resources (default-resources) @ seleniumtest ---
+[INFO] skip non existing resourceDirectory C:\TestProject\SeleniumTest\src\main\resources
+[INFO]
+[INFO] --- compiler:3.13.0:compile (default-compile) @ seleniumtest ---
+[INFO] Recompiling the module because of changed source code.
+[INFO] Compiling 1 source file with javac [debug target 17] to target\classes
+[WARNING] location of system modules is not set in conjunction with -source 17
+  not setting the location of system modules may lead to class files that cannot run on JDK 17
+    --release 17 is recommended instead of -source 17 -target 17 because it sets the location of system modules automatically
+[INFO]
+[INFO] --- resources:3.3.1:testResources (default-testResources) @ seleniumtest ---
+[INFO] Copying 2 resources from src\test\resources to target\test-classes
+[INFO] 
+[INFO] --- compiler:3.13.0:testCompile (default-testCompile) @ seleniumtest ---
+[INFO] Recompiling the module because of changed dependency.
+[INFO] Compiling 1 source file with javac [debug target 17] to target\test-classes
+[WARNING] location of system modules is not set in conjunction with -source 17
+  not setting the location of system modules may lead to class files that cannot run on JDK 17
+    --release 17 is recommended instead of -source 17 -target 17 because it sets the location of system modules automatically
+[INFO]
+[INFO] --- surefire:3.2.5:test (default-test) @ seleniumtest ---
+[INFO] Using auto detected provider org.apache.maven.surefire.testng.TestNGProvider
+[INFO] 
+[INFO] -------------------------------------------------------
+[INFO]  T E S T S
+[INFO] -------------------------------------------------------
+[INFO] Running TestSuite
+SLF4J(W): No SLF4J providers were found.
+SLF4J(W): Defaulting to no-operation (NOP) logger implementation
+SLF4J(W): See https://www.slf4j.org/codes.html#noProviders for further details.
+feb 25, 2026 2:40:12 AM org.openqa.selenium.devtools.CdpVersionFinder findNearestMatch
+WARNING: Unable to find CDP implementation matching 145
+feb 25, 2026 2:40:12 AM org.openqa.selenium.chromium.ChromiumDriver lambda$new$5
+WARNING: Unable to find version of CDP to use for 145.0.7632.110. You may need to include a dependency on a specific version of the CDP using something similar to `org.seleniumhq.selenium:selenium-devtools-v86:4.21.0` where the version ("v86") matches the version of the chromium-based browser you're using and the version number of the artifact is the same as Selenium's.
+UI: original=11219763 bytes, output=6815744 bytes, reduction=39,25%
+Downloaded file size: 6863747bytes
+Original file size: 11320785bytes
+Renamed downloaded file to: CrabRaveCompressed.mp4
+[INFO] Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 92.67 s -- in TestSuite
+[INFO] 
+[INFO] Results:
+[INFO]
+[INFO] Tests run: 1, Failures: 0, Errors: 0, Skipped: 0
+[INFO]
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD SUCCESS
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  01:35 min
+[INFO] Finished at: 2026-02-25T02:41:43+01:00
+[INFO] ------------------------------------------------------------------------
