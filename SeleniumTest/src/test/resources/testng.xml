@@ -1,8 +1,7 @@
-<!DOCTYPE suite SYSTEM "https://testng.org/testng-1.0.dtd">
-<suite name="SeleniumSuite">
-  <test name="UI">
-    <packages>
-      <package name="com.testproject.tests"/>
-    </packages>
+<suite name="Suite">
+  <test name="JPEGmini">
+    <classes>
+      <class name="JpegMiniTest"/>
+    </classes>
   </test>
 </suite>

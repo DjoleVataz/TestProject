@@ -1,0 +1,7 @@
+<suite name="Suite">
+  <test name="JPEGmini">
+    <classes>
+      <class name="JpegMiniTest"/>
+    </classes>
+  </test>
+</suite>
