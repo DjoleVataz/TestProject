@@ -22,6 +22,12 @@ public class JpegMiniTest {
     private WebDriver driver;
     private Path downloadDir;
 
+    /**
+     * Test setup:
+     * - Create /target/downloads folder
+     * - Configure Chrome to download automatically into that folder
+     * - Start ChromeDriver
+     */
     @BeforeMethod
     public void setup() throws Exception {
         downloadDir = Paths.get(System.getProperty("user.dir"), "target", "downloads");
@@ -38,12 +44,22 @@ public class JpegMiniTest {
         driver = new ChromeDriver(options);
         driver.manage().window().maximize();
     }
-
+    /**
+     * Close Chrome window
+     */
     @AfterMethod
     public void teardown() {
-        // if (driver != null) driver.quit();
+         if (driver != null) driver.quit();
     }
-
+    /**
+     * Main E2E scenario:
+     * - Upload a video "CrabRaveUncompressed" from /resources/video
+     * - Wait for upload + compression
+     * - Assert UI sizes (Original vs Output) and print reduction %
+     * - Download the compressed video
+     * - Verify downloaded file is smaller than the original on disk
+     * - Rename the downloaded file to a stable name for easier verification ("CrabRaveCompressed.mp4")
+     */
     @Test
     public void compressVideo_and_download_and_verify_sizes() throws Exception {
         Path originalVideo = getTestResourcePath("video/CrabRaveUncompressed.mp4");
@@ -51,16 +67,21 @@ public class JpegMiniTest {
 
         HomePage page = new HomePage(driver);
 
+        // Navigate to homepage
         page.openHome();
+        // cookie banner + marketing popup; close them to avoid click interception
         page.closeOverlaysIfPresent();
+        // Click "Compress Videos" (opens a new tab) and switch to it
         page.clickCompressVideosAndSwitchToNewTab();
-        page.closeOverlaysIfPresent();
+        // Ensure the compress page is ready (file input exists)
         page.waitForCompressPageReady();
-
+        // Upload using drag-and-drop mechanics
         page.dragAndDropFile(originalVideo);
 
+        // Gets the "Compressing CrabRaveUncompressed.mp4"
         String fileName = originalVideo.getFileName().toString();
 
+        // Wait for upload and compression lifecycle
         page.waitForUploadToStart(fileName);
         page.waitForUploadToFinish();
         page.waitForCompressionToStart(fileName);
@@ -70,11 +91,12 @@ public class JpegMiniTest {
         HomePage.SizePair ui = page.readOriginalAndOutputSizesFromResult();
         Assert.assertTrue(ui.compressedBytes() < ui.originalBytes(),
                 "UI output is not smaller than original.");
-
         System.out.printf("UI: original=%d bytes, output=%d bytes, reduction=%.2f%%%n",
                 ui.originalBytes(), ui.compressedBytes(), ui.reductionPercent());
 
+        // Clean folder directory before download
         cleanDirectory(downloadDir);
+        // Click Download the video
         page.clickDownloadVideo();
 
         Path downloaded = waitForDownloadedVideo(downloadDir, Duration.ofMinutes(5));
@@ -83,16 +105,18 @@ public class JpegMiniTest {
         System.out.println("Downloaded file size: " + downloadedBytes);
         System.out.println("Original file size: " + originalBytes);
 
+        // Rename the downloaded video
         String ext = getExtension(downloaded.getFileName().toString());
         Path renamed = downloadDir.resolve("CrabRaveCompressed" + ext);
 
         // If file already exists from previous run, delete it
         Files.deleteIfExists(renamed);
 
-        // Rename (move) the file
+        // Rename and move the file
         Files.move(downloaded, renamed);
         System.out.println("Renamed downloaded file to: " + renamed.getFileName());
 
+        // Compare file sizes on disk (reference vs downloaded output)
         Assert.assertTrue(downloadedBytes < originalBytes,
                 "Downloaded compressed file is not smaller than original. original=" +
                         originalBytes + " compressed=" + downloadedBytes);
@@ -100,6 +124,10 @@ public class JpegMiniTest {
 
     // ---------- helpers ----------
 
+    /**
+     * Loads a file from src/test/resources using the classpath and returns a real filesystem path.
+     * e.g. "video/CrabRaveUncompressed.mp4"
+     */
     private static Path getTestResourcePath(String resourceRelativePath) throws Exception {
         URL url = JpegMiniTest.class.getClassLoader().getResource(resourceRelativePath);
         if (url == null) {
@@ -108,6 +136,9 @@ public class JpegMiniTest {
         return Paths.get(url.toURI());
     }
 
+    /**
+     * Deletes files inside a directory. Used to ensure a clean download folder before we click "Download the video".
+     */
     private static void cleanDirectory(Path dir) throws Exception {
         if (!Files.exists(dir))
             return;
@@ -121,6 +152,10 @@ public class JpegMiniTest {
         }
     }
 
+    /**
+     * Waits for Chrome to finish downloading an .mp4 file into the given directory.
+     * Returns the first .mp4 file found once download is complete.
+     */
     private static Path waitForDownloadedVideo(Path dir, Duration timeout) throws Exception {
         long end = System.currentTimeMillis() + timeout.toMillis();
 
@@ -135,7 +170,7 @@ public class JpegMiniTest {
                     continue;
                 }
 
-                // pick newest MP4 only (ignore dmg)
+                // pick newest MP4 only
                 for (int i = files.size() - 1; i >= 0; i--) {
                     Path p = files.get(i);
                     String name = p.getFileName().toString().toLowerCase();
@@ -151,6 +186,9 @@ public class JpegMiniTest {
         throw new RuntimeException("Video download (.mp4) did not complete in time. Folder: " + dir);
     }
 
+    /**
+     * Returns file extension including dot (".mp4"), or empty string if no extension exists.
+     */
     private static String getExtension(String fileName) {
         int dot = fileName.lastIndexOf('.');
         return (dot >= 0) ? fileName.substring(dot) : "";
